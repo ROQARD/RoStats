@@ -8,7 +8,6 @@ export default async function handler(req, res) {
   // --- BACKEND LOGIC ---
   if (id || uid) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    
     const tryFetch = async (sub, path) => {
       for (let p of PROXIES) {
         try {
@@ -58,7 +57,7 @@ export default async function handler(req, res) {
         body { background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .container { width: 100%; max-width: 650px; }
         .search-area { background: var(--card); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; text-align: center; margin-bottom: 12px; }
-        .logo-img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 20px; border-radius: 15px; }
+        .logo-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; border-radius: 20px; border: 1px solid var(--border); }
         .input-box { display: flex; gap: 10px; background: #000; padding: 6px; border-radius: 14px; border: 1px solid var(--border); }
         input { flex: 1; background: transparent; border: none; color: white; padding: 12px 15px; font-size: 0.95rem; outline: none; }
         .scan-btn { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 0.75rem; }
@@ -78,7 +77,7 @@ export default async function handler(req, res) {
 <body>
     <div class="container">
         <div class="search-area" id="searchSection">
-            <img src="/logo.jpeg" alt="RoStats" class="logo-img">
+            <img src="https://raw.githubusercontent.com/ROQARD/RoStats/main/logo.jpeg" alt="RoStats" class="logo-img">
             <div class="input-box">
                 <input type="text" id="placeId" placeholder="Enter Game ID or Link...">
                 <button class="scan-btn" id="scanBtn" onclick="run()" disabled>Scan</button>
