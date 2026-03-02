@@ -62,7 +62,6 @@ export default async function middleware(request) {
   });
 }
 
-// Config to ensure the middleware catches all paths
 export const config = {
   matcher: '/:path*',
 };
@@ -70,8 +69,10 @@ export const config = {
 const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-adsense-account" content="ca-pub-1937157010205619">
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>RoStats</title>
+    <title>RoStats</title>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
