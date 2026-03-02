@@ -5,14 +5,14 @@ export default async function handler(req, res) {
   const id = searchParams.get("id");
   const uid = searchParams.get("uid");
 
-  // --- BACKEND LOGIC ---
+  // --- 1. BACKEND LOGIC (Runs when scanning) ---
   if (id || uid) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     const tryFetch = async (sub, path) => {
       for (let p of PROXIES) {
         try {
           const r = await fetch(`https://${sub}.${p}${path}`, { 
-            headers: { "User-Agent": "RoStats_Vercel_AllInOne" }
+            headers: { "User-Agent": "RoStats_AllInOne" }
           });
           if (r.status === 403) throw new Error("Private");
           if (r.ok) return await r.json();
@@ -30,19 +30,18 @@ export default async function handler(req, res) {
         return res.status(200).json({ universeId: d.universeId });
       }
       if (uid) {
-        const [g, v, f] = await Promise.all([
+        const [g, v] = await Promise.all([
           tryFetch('games', `/v1/games?universeIds=${uid}`),
-          tryFetch('games', `/v1/games/votes?universeIds=${uid}`),
-          tryFetch('games', `/v1/games/${uid}/favorites/count`)
+          tryFetch('games', `/v1/games/votes?universeIds=${uid}`)
         ]);
-        return res.status(200).json({ game: g.data[0], votes: v.data[0], favorites: f.favoritesCount });
+        return res.status(200).json({ game: g.data[0], votes: v.data[0] });
       }
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
   }
 
-  // --- FRONTEND HTML ---
+  // --- 2. FRONTEND UI (The HTML Website) ---
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`
 <!DOCTYPE html>
@@ -57,7 +56,7 @@ export default async function handler(req, res) {
         body { background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .container { width: 100%; max-width: 650px; }
         .search-area { background: var(--card); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; text-align: center; margin-bottom: 12px; }
-        .logo-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; border-radius: 20px; border: 1px solid var(--border); }
+        .logo-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; border-radius: 20px; }
         .input-box { display: flex; gap: 10px; background: #000; padding: 6px; border-radius: 14px; border: 1px solid var(--border); }
         input { flex: 1; background: transparent; border: none; color: white; padding: 12px 15px; font-size: 0.95rem; outline: none; }
         .scan-btn { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-size: 0.75rem; }
@@ -68,66 +67,47 @@ export default async function handler(req, res) {
         .val { font-size: 1.4rem; font-weight: 800; }
         .label { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; font-weight: 800; margin-bottom: 6px; }
         #gDesc { font-size: 0.85rem; color: var(--dim); line-height: 1.6; white-space: pre-wrap; margin-top: 10px; }
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .btn { text-decoration: none; text-align: center; padding: 16px; border-radius: 14px; font-weight: 800; text-transform: uppercase; font-size: 0.8rem; cursor: pointer; border: none; }
-        .play-btn { background: #fff; color: #000; }
-        .copy-btn { background: #111; color: #fff; border: 1px solid var(--border); }
+        .btn { text-decoration: none; text-align: center; padding: 16px; border-radius: 14px; font-weight: 800; text-transform: uppercase; font-size: 0.8rem; cursor: pointer; border: none; background: #fff; color: #000; margin-top: 10px;}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="search-area" id="searchSection">
-            <img src="https://raw.githubusercontent.com/ROQARD/RoStats/main/logo.jpeg" alt="RoStats" class="logo-img">
+            <img src="logo.jpeg" alt="RoStats" class="logo-img">
             <div class="input-box">
-                <input type="text" id="placeId" placeholder="Enter Game ID or Link...">
+                <input type="text" id="placeId" placeholder="Enter Game ID...">
                 <button class="scan-btn" id="scanBtn" onclick="run()" disabled>Scan</button>
             </div>
             <div class="captcha-box"><div class="cf-turnstile" data-sitekey="0x4AAAAAACk-FIXxhlsidtFU" data-callback="onCaptcha"></div></div>
         </div>
         <div id="results" class="dashboard">
-            <div class="box" style="text-align:center"><h2 id="gTitle">-</h2><p id="gOwner" style="color:var(--accent); font-size:0.9rem;">-</p></div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <div class="box" style="text-align:center"><h2 id="gTitle">-</h2><p id="gOwner" style="color:var(--accent);">-</p></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="box"><div class="label">Active</div><div class="val" id="vPlay">-</div></div>
                 <div class="box"><div class="label">Rating</div><div class="val" id="vRate">-</div></div>
-                <div class="box"><div class="label">Visits</div><div class="val" id="vVisit">-</div></div>
             </div>
-            <div class="box"><div class="label">Full Description</div><div id="gDesc"></div></div>
-            <div class="action-grid">
-                <button class="btn copy-btn" onclick="copyStats()">Copy Summary</button>
-                <a id="robloxLink" class="btn play-btn" target="_blank">Open Roblox</a>
-            </div>
-            <button class="btn" style="background: transparent; color: var(--dim); margin-top: 10px;" onclick="location.reload()">New Search</button>
+            <div class="box"><div class="label">Description</div><div id="gDesc"></div></div>
+            <button class="btn" onclick="location.reload()">New Search</button>
         </div>
     </div>
     <script>
         let captchaToken = null;
-        const fmt = x => x >= 1e6 ? (x/1e6).toFixed(1)+'M' : x >= 1e3 ? (x/1e3).toFixed(1)+'K' : x.toLocaleString();
-        function onCaptcha(token) { captchaToken = token; document.getElementById('scanBtn').disabled = false; }
-        function copyStats() {
-            const t = document.getElementById('gTitle').innerText;
-            const p = document.getElementById('vPlay').innerText;
-            navigator.clipboard.writeText(t + " Stats\\nActive: " + p + "\\nScanned via RoStats");
-        }
+        function onCaptcha(t) { captchaToken = t; document.getElementById('scanBtn').disabled = false; }
         async function run() {
             const id = document.getElementById('placeId').value.replace(/\\D/g, '');
-            const scanBtn = document.getElementById('scanBtn');
-            if (!id) return;
-            scanBtn.innerText = "WAIT...";
+            document.getElementById('scanBtn').innerText = "WAIT...";
             try {
-                const v = await fetch(window.location.pathname + '?id=' + id).then(r => r.json());
-                const d = await fetch(window.location.pathname + '?uid=' + v.universeId).then(r => r.json());
+                const v = await fetch(window.location.href + '?id=' + id).then(r => r.json());
+                const d = await fetch(window.location.href + '?uid=' + v.universeId).then(r => r.json());
                 document.getElementById('searchSection').style.display = 'none';
                 document.getElementById('results').style.display = 'flex';
-                const g = d.game;
                 const rate = Math.round((d.votes.upVotes / (d.votes.upVotes + d.votes.downVotes)) * 100) || 0;
-                document.getElementById('gTitle').innerText = g.name;
-                document.getElementById('gOwner').innerText = "By " + g.creator.name;
-                document.getElementById('vPlay').innerText = fmt(g.playing);
+                document.getElementById('gTitle').innerText = d.game.name;
+                document.getElementById('gOwner').innerText = "By " + d.game.creator.name;
+                document.getElementById('vPlay').innerText = d.game.playing.toLocaleString();
                 document.getElementById('vRate').innerText = rate + "%";
-                document.getElementById('vVisit').innerText = fmt(g.visits);
-                document.getElementById('gDesc').textContent = g.description;
-                document.getElementById('robloxLink').href = "https://www.roblox.com/games/" + id;
-            } catch (e) { alert("Error finding game."); location.reload(); }
+                document.getElementById('gDesc').textContent = d.game.description;
+            } catch (e) { alert("Error."); location.reload(); }
         }
     </script>
 </body>
