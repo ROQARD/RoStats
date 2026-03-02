@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "index.js": {
+      "runtime": "vercel-node@latest"
+    }
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.js" }
   ]
