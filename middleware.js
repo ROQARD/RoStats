@@ -3,16 +3,17 @@ const PROXIES = ["rotunnel.com", "roproxy.com", "rbxproxy.com"];
 export default async function middleware(request) {
   const url = new URL(request.url);
 
-  // 1. Handle API requests
+  // 1. Handle API Routes
   if (url.pathname.startsWith("/api/")) {
     const apiHeaders = { 
       "Content-Type": "application/json", 
       "Access-Control-Allow-Origin": "*" 
     };
 
+    // Turnstile Verification
     if (url.pathname === "/api/verify-captcha") {
       const token = url.searchParams.get("token");
-      const secret = process.env.TURNSTILE_SECRET || "0x4AAAAAACk-FBhYSFtiH6dRcg_6osS-xLM"; 
+      const secret = "0x4AAAAAACk-FBhYSFtiH6dRcg_6osS-xLM"; 
       const outcome = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -55,17 +56,15 @@ export default async function middleware(request) {
     }
   }
 
-  // 2. Default: Serve the HTML
+  // 2. Serve the HTML for the landing page
   return new Response(html, {
     headers: { "Content-Type": "text/html" },
   });
 }
 
-// THIS IS THE KEY: This tells Vercel to run this script for every URL
+// Config to ensure the middleware catches all paths
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: '/:path*',
 };
 
 const html = `<!DOCTYPE html>
