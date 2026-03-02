@@ -53,7 +53,7 @@ const html = `<!DOCTYPE html>
         body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
         .header { width: 100%; max-width: 650px; padding: 20px; display: flex; justify-content: flex-end; gap: 10px; min-height: 80px; align-items: center; }
-        .auth-btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 0.8rem; }
+        .auth-btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
         .auth-btn.secondary { background: #1a1a1a; color: #fff; border: 1px solid var(--border); }
         
         .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
@@ -79,11 +79,10 @@ const html = `<!DOCTYPE html>
         .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .nav-chip { background: var(--card); border: 1px solid var(--border); color: #ccc; padding: 10px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
 
-        .fav-btn { position: absolute; top: 20px; right: 20px; font-size: 1.8rem; cursor: pointer; color: #222; }
-        .fav-btn.active { color: var(--warn); }
-        .thumb-wrap { width: 110px; height: 110px; border-radius: 22px; margin: 0 auto 15px; overflow: hidden; border: 1px solid var(--border); }
-        .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .footer { position: fixed; bottom: 20px; right: 25px; opacity: 0.3; font-size: 0.7rem; font-weight: 800; }
+        .fav-btn { position: absolute; top: 20px; right: 20px; font-size: 1.8rem; cursor: pointer; }
+        .footer { position: fixed; bottom: 20px; right: 25px; opacity: 0.5; font-size: 0.7rem; font-weight: 800; }
+        .footer a { color: inherit; text-decoration: none; transition: 0.2s; }
+        .footer a:hover { color: var(--accent); opacity: 1; }
     </style>
 </head>
 <body>
@@ -125,10 +124,10 @@ const html = `<!DOCTYPE html>
 
         <div id="results" class="dashboard">
             <div class="box">
-                <div class="fav-btn" id="heartBtn" onclick="toggleFavorite()">❤</div>
-                <div class="thumb-wrap"><img id="gThumb" src=""></div>
-                <h2 id="gTitle" style="font-size: 1.6rem;">-</h2>
-                <a id="gOwner" style="color:var(--accent); text-decoration:none; font-size:0.85rem; font-weight:700; margin-top:5px; display:inline-block;" target="_blank">-</a>
+                <div class="fav-btn" id="heartBtn" onclick="toggleFavorite()">🤍</div>
+                <h2 id="gTitle" style="font-size: 1.8rem; margin-bottom: 5px;">-</h2>
+                <a id="gOwner" style="color:var(--accent); text-decoration:none; font-size:0.9rem; font-weight:700; display:block; margin-bottom: 15px;" target="_blank">-</a>
+                <a id="gPlay" class="auth-btn" style="width:100%; background:#fff; color:#000;" target="_blank">Play on Roblox</a>
             </div>
             <div class="stats-grid">
                 <div class="box"><span class="label">Playing</span><span class="val" id="vPlay">-</span></div>
@@ -143,7 +142,7 @@ const html = `<!DOCTYPE html>
         </div>
     </div>
 
-    <div class="footer">BY ROQARD</div>
+    <div class="footer"><a href="https://www.roblox.com/users/9461867215/profile" target="_blank">BY ROQARD</a></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
@@ -230,11 +229,14 @@ const html = `<!DOCTYPE html>
                 document.getElementById('vVisit').innerText = fmt(g.visits);
                 document.getElementById('vRate').innerText = Math.round((d.votes.upVotes / (d.votes.upVotes + d.votes.downVotes)) * 100) + "%";
                 document.getElementById('gDesc').innerText = g.description;
-                document.getElementById('gThumb').src = "https://www.roblox.com/asset-thumbnail/image?assetId=" + id + "&width=420&height=420&format=png";
-                document.getElementById('gOwner').innerText = "By " + g.creator.name;
-                document.getElementById('gOwner').href = "https://www.roblox.com/users/" + g.creator.id;
+                document.getElementById('gPlay').href = "https://www.roblox.com/games/" + id;
                 
-                document.getElementById('heartBtn').classList.toggle('active', userData?.favorites?.some(x => x.id === id));
+                const type = g.creator.type === "Group" ? "groups" : "users";
+                document.getElementById('gOwner').innerText = "By " + g.creator.name;
+                document.getElementById('gOwner').href = \`https://www.roblox.com/\${type}/\${g.creator.id}\`;
+                
+                updateHeartState(id);
+                
                 if(currentUser) await updateDoc(doc(db, "users", currentUser.uid), { recents: arrayUnion(currentGame) });
                 await setDoc(doc(db, "popular", id), { name: g.name, count: increment(1), hidden: false }, { merge: true });
                 btn.innerText = 'Scan';
@@ -242,12 +244,16 @@ const html = `<!DOCTYPE html>
             } catch(e) { btn.innerText = 'Scan'; alert("Error loading game."); }
         };
 
+        function updateHeartState(id) {
+            const heart = document.getElementById('heartBtn');
+            const isFav = userData?.favorites?.some(x => x.id === id);
+            heart.innerText = isFav ? "❤️" : "🤍";
+        }
+
         window.toggleFavorite = async () => {
             if(!currentUser) return openAuth('login');
-            const heart = document.getElementById('heartBtn');
-            const isAdding = !heart.classList.contains('active');
-            heart.classList.toggle('active');
-            if(isAdding) {
+            const isFav = userData?.favorites?.some(x => x.id === currentGame.id);
+            if(!isFav) {
                 await updateDoc(doc(db, "users", currentUser.uid), { favorites: arrayUnion(currentGame) });
             } else {
                 const item = userData.favorites.find(x => x.id === currentGame.id);
@@ -255,6 +261,7 @@ const html = `<!DOCTYPE html>
             }
             const snap = await getDoc(doc(db, "users", currentUser.uid));
             userData = snap.data();
+            updateHeartState(currentGame.id);
             renderUserCollections();
         };
 
