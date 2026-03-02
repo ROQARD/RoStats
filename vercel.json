@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/api/stats", "destination": "/script.js" }
+  ],
+  "functions": {
+    "script.js": {
+      "runtime": "vercel-node@latest"
+    }
+  }
+}
