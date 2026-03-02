@@ -1,7 +1,9 @@
+const PROXIES = ["rotunnel.com", "roproxy.com", "rbxproxy.com"];
+
 export default async function middleware(request) {
   const url = new URL(request.url);
 
-  // 1. API ROUTES (Simplified)
+  // 1. API Routes
   if (url.pathname.startsWith("/api/")) {
     const apiHeaders = { 
       "Content-Type": "application/json", 
@@ -19,15 +21,10 @@ export default async function middleware(request) {
       return new Response(JSON.stringify(outcome), { headers: apiHeaders });
     }
 
-    // Proxy Fetch Logic
     const tryFetch = async (s, e) => {
-      const PROXIES = ["rotunnel.com", "roproxy.com", "rbxproxy.com"];
       for (let p of PROXIES) {
         try {
-          const r = await fetch(`https://${s}.${p}${e}`, { 
-            headers: { "User-Agent": "RoStats_Standard" },
-            next: { revalidate: 60 } // Cache for 1 minute to save resources
-          });
+          const r = await fetch(`https://${s}.${p}${e}`, { headers: { "User-Agent": "RoStats_Standard" }});
           if (r.status === 403) throw new Error("Private");
           if (r.ok) return await r.json();
         } catch (err) {
@@ -58,14 +55,13 @@ export default async function middleware(request) {
     }
   }
 
-  // 2. SERVE THE FULL HTML
   return new Response(html, {
     headers: { "Content-Type": "text/html" },
   });
 }
 
 export const config = {
-  matcher: ['/', '/api/:path*'],
+  matcher: '/:path*',
 };
 
 const html = `<!DOCTYPE html>
@@ -93,21 +89,33 @@ const html = `<!DOCTYPE html>
         .chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
         .nav-chip { background: var(--card); border: 1px solid var(--border); color: var(--dim); padding: 8px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
         .nav-chip:hover { border-color: var(--accent); color: #fff; }
-        .dashboard { display: none; flex-direction: column; gap: 12px; }
-        .box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 18px; }
+        .dashboard { display: none; flex-direction: column; gap: 12px; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 18px; position: relative; }
+        .thumb-wrap { width: 120px; height: 120px; border-radius: 18px; background: #111; margin: 0 auto 15px; overflow: hidden; display: none; border: 1px solid var(--border); }
+        .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .label { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; font-weight: 800; margin-bottom: 6px; }
         .val { font-size: 1.3rem; font-weight: 800; }
-        .label { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; font-weight: 800; }
+        .content-card { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 20px; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .meta-item { font-size: 0.75rem; color: var(--dim); }
+        .meta-item b { color: #fff; display: block; font-size: 0.85rem; margin-top: 2px; }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .btn { text-decoration: none; text-align: center; padding: 16px; border-radius: 14px; font-weight: 800; text-transform: uppercase; font-size: 0.8rem; cursor: pointer; border: none; transition: 0.2s; }
+        .play-btn { background: #fff; color: #000; }
+        .copy-btn { background: #111; color: #fff; border: 1px solid var(--border); }
         .error-msg { color: var(--warn); font-size: 0.65rem; font-weight: 800; margin-top: 10px; display: none; }
-        .footer { margin-top: 40px; }
-        .footer-link { color: var(--dim); text-decoration: none; font-size: 0.65rem; font-weight: 800; opacity: 0.4; }
+        .footer { position: fixed; bottom: 20px; right: 25px; z-index: 100; }
+        .footer-link { color: var(--dim); text-decoration: none; font-size: 0.65rem; font-weight: 800; letter-spacing: 1.5px; opacity: 0.4; transition: 0.3s; }
+        .footer-link:hover { opacity: 1; color: var(--accent); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="search-area">
-            <h1 style="font-size: 2rem; margin-bottom:20px;">Ro<span style="color:var(--accent)">Stats</span></h1>
+            <h1 style="font-size: 2rem; margin-bottom:20px; letter-spacing: -1.2px;">Ro<span style="color:var(--accent)">Stats</span></h1>
             <div class="input-box">
-                <input type="text" id="placeId" placeholder="Paste Game ID...">
+                <input type="text" id="placeId" placeholder="Paste Game Link or ID...">
                 <button class="scan-btn" id="scanBtn" onclick="run()" disabled>Scan</button>
             </div>
             <div class="captcha-box">
@@ -115,33 +123,97 @@ const html = `<!DOCTYPE html>
             </div>
             <div id="errorBox" class="error-msg">EXPERIENCE NOT FOUND</div>
         </div>
+        <div id="navWrapper" class="nav-wrapper">
+            <div id="recentBlock" style="display:none">
+                <div class="nav-label">Recent</div>
+                <div id="recentContainer" class="chip-group"></div>
+            </div>
+            <div id="recomBlock">
+                <div class="nav-label">Recommended</div>
+                <div id="recomContainer" class="chip-group">
+                    <div class="nav-chip" onclick="quickScan('109612380137176')">Doors</div>
+                    <div class="nav-chip" onclick="quickScan('114407982270919')">Dress To Impress</div>
+                </div>
+            </div>
+        </div>
         <div id="results" class="dashboard">
-            <div class="box" style="text-align:center"><h2 id="gTitle">-</h2></div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="box" style="text-align:center">
+                <div id="thumbWrap" class="thumb-wrap"><img id="gThumb" src=""></div>
+                <h2 id="gTitle">-</h2>
+                <a id="gOwner" style="color:var(--accent); text-decoration:none; font-size:0.9rem; font-weight:600; margin-top:10px; display:inline-block;" target="_blank">-</a>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                 <div class="box"><div class="label">Active</div><div class="val" id="vPlay">-</div></div>
                 <div class="box"><div class="label">Rating</div><div class="val" id="vRate">-</div></div>
+                <div class="box"><div class="label">Dislikes</div><div class="val" id="vDis" style="color:var(--warn)">-</div></div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                <div class="box"><div class="label">Visits</div><div class="val" id="vVisit">-</div></div>
+                <div class="box"><div class="label">Likes</div><div class="val" id="vLike">-</div></div>
+                <div class="box"><div class="label">Favorites</div><div class="val" id="vFav">-</div></div>
+            </div>
+            <div class="content-card">
+                <div class="meta-grid">
+                    <div class="meta-item">Created<b><span id="dCreate">-</span></b></div>
+                    <div class="meta-item">Update<b><span id="dUpdate">-</span></b></div>
+                    <div class="meta-item">Max<b><span id="vMax">-</span></b></div>
+                    <div class="meta-item">Growth<b><span id="vGrowth">-</span></b></div>
+                </div>
+                <div class="label">Description</div>
+                <div id="gDesc" style="font-size: 0.8rem; color: var(--dim); line-height: 1.4; max-height: 150px; overflow-y: auto; white-space: pre-wrap;"></div>
+            </div>
+            <div class="action-grid">
+                <button class="btn copy-btn" onclick="copyStats()">Copy Summary</button>
+                <a id="robloxLink" class="btn play-btn" target="_blank">Open Roblox</a>
             </div>
         </div>
     </div>
-    <div class="footer"><a href="#" class="footer-link">BY ROQARD</a></div>
+    <div class="footer"><a href="https://www.roblox.com/users/9461867215/profile" class="footer-link" target="_blank">BY ROQARD</a></div>
     <script>
         let captchaToken = null;
+        const fmt = x => x >= 1e6 ? (x/1e6).toFixed(1)+'M' : x >= 1e3 ? (x/1e3).toFixed(1)+'K' : x.toLocaleString();
         function onCaptcha(token) { captchaToken = token; document.getElementById('scanBtn').disabled = false; }
-        async function run() {
-            const id = document.getElementById('placeId').value.replace(/\\D/g, '');
+        function quickScan(id) { document.getElementById('placeId').value = id; run(); }
+        function copyStats() {
+            const t = document.getElementById('gTitle').innerText;
+            const p = document.getElementById('vPlay').innerText;
+            navigator.clipboard.writeText(t + " Stats\\nActive: " + p + "\\nvia RoStats");
+            const b = document.querySelector('.copy-btn'); b.innerText = "COPIED";
+            setTimeout(() => { b.innerText = "COPY SUMMARY"; }, 2000);
+        }
+        async function run() { 
+            if(!captchaToken) return;
+            const raw = document.getElementById('placeId').value.trim();
+            const id = raw.match(/games\\/(\\d+)/) ? raw.match(/games\\/(\\d+)/)[1] : raw.replace(/\\D/g, '');
             const scanBtn = document.getElementById('scanBtn');
             scanBtn.innerText = '...';
             try {
                 const r = await fetch("/api/validate-id?id=" + id);
                 const v = await r.json();
                 const d = await fetch("/api/get-stats?uid=" + v.universeId).then(res => res.json());
+                const g = d.game; const vt = d.votes;
+                document.getElementById('navWrapper').style.display = 'none';
                 document.getElementById('results').style.display = 'flex';
-                document.getElementById('gTitle').innerText = d.game.name;
-                document.getElementById('vPlay').innerText = d.game.playing;
-                scanBtn.innerText = 'Scan';
+                document.getElementById('gTitle').innerText = g.name;
+                document.getElementById('vPlay').innerText = fmt(g.playing);
+                document.getElementById('vVisit').innerText = fmt(g.visits);
+                document.getElementById('vLike').innerText = fmt(vt.upVotes);
+                document.getElementById('vDis').innerText = fmt(vt.downVotes);
+                document.getElementById('vFav').innerText = fmt(d.favorites);
+                document.getElementById('vRate').innerText = Math.round((vt.upVotes / (vt.upVotes + vt.downVotes)) * 100) + "%";
+                document.getElementById('dCreate').innerText = new Date(g.created).toLocaleDateString();
+                document.getElementById('dUpdate').innerText = new Date(g.updated).toLocaleDateString();
+                document.getElementById('vMax').innerText = g.maxPlayers || "--";
+                document.getElementById('gDesc').innerText = g.description;
+                document.getElementById('gOwner').innerText = "By " + g.creator.name;
+                document.getElementById('gOwner').href = "https://www.roblox.com/users/" + g.creator.id;
+                document.getElementById('robloxLink').href = "https://www.roblox.com/games/" + id;
+                document.getElementById('gThumb').src = "https://www.roblox.com/asset-thumbnail/image?assetId=" + id + "&width=420&height=420&format=png";
+                document.getElementById('thumbWrap').style.display = 'block';
+                scanBtn.innerText = 'SCAN';
             } catch(e) { 
                 document.getElementById('errorBox').style.display = 'block'; 
-                scanBtn.innerText = 'Scan';
+                scanBtn.innerText = 'SCAN';
             }
         }
     </script>
