@@ -53,10 +53,11 @@ const html = `<!DOCTYPE html>
         body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
         .header { width: 100%; max-width: 650px; padding: 20px; display: flex; justify-content: flex-end; gap: 10px; min-height: 80px; align-items: center; }
-        .auth-btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+        .auth-btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
         .auth-btn.secondary { background: #1a1a1a; color: #fff; border: 1px solid var(--border); }
+        .auth-btn:active { transform: scale(0.98); }
         
-        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(8px); }
         .modal { background: #0f0f0f; border: 1px solid var(--border); padding: 30px; border-radius: 28px; width: 90%; max-width: 380px; text-align: center; }
         .modal input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 14px; border-radius: 14px; margin-bottom: 12px; outline: none; }
 
@@ -79,10 +80,9 @@ const html = `<!DOCTYPE html>
         .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .nav-chip { background: var(--card); border: 1px solid var(--border); color: #ccc; padding: 10px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
 
-        .fav-btn { position: absolute; top: 20px; right: 20px; font-size: 1.8rem; cursor: pointer; }
+        .fav-btn { position: absolute; top: 20px; right: 20px; font-size: 1.8rem; cursor: pointer; user-select: none; }
         .footer { position: fixed; bottom: 20px; right: 25px; opacity: 0.5; font-size: 0.7rem; font-weight: 800; }
-        .footer a { color: inherit; text-decoration: none; transition: 0.2s; }
-        .footer a:hover { color: var(--accent); opacity: 1; }
+        .footer a { color: inherit; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -117,7 +117,7 @@ const html = `<!DOCTYPE html>
         </div>
 
         <div id="homeUI">
-            <div class="nav-label">Popular Globally</div><div id="popContainer" class="chip-group"></div>
+            <div class="nav-label">🔥 Most Popular</div><div id="popContainer" class="chip-group"></div>
             <div id="favBlock" style="display:none;"><div class="nav-label">Favorites ❤️</div><div id="favContainer" class="chip-group"></div></div>
             <div class="nav-label">Recent Searches</div><div id="recentContainer" class="chip-group"></div>
         </div>
@@ -127,7 +127,10 @@ const html = `<!DOCTYPE html>
                 <div class="fav-btn" id="heartBtn" onclick="toggleFavorite()">🤍</div>
                 <h2 id="gTitle" style="font-size: 1.8rem; margin-bottom: 5px;">-</h2>
                 <a id="gOwner" style="color:var(--accent); text-decoration:none; font-size:0.9rem; font-weight:700; display:block; margin-bottom: 15px;" target="_blank">-</a>
-                <a id="gPlay" class="auth-btn" style="width:100%; background:#fff; color:#000;" target="_blank">Play on Roblox</a>
+                <div style="display:flex; gap:10px;">
+                    <a id="gPlay" class="auth-btn" style="flex:2; background:#fff; color:#000;" target="_blank">Play Game</a>
+                    <button onclick="shareStats()" class="auth-btn secondary" style="flex:1;">Copy Stats</button>
+                </div>
             </div>
             <div class="stats-grid">
                 <div class="box"><span class="label">Playing</span><span class="val" id="vPlay">-</span></div>
@@ -163,7 +166,7 @@ const html = `<!DOCTYPE html>
         const db = getFirestore(app);
         setPersistence(auth, browserLocalPersistence);
 
-        let currentUser = null, userData = null, currentGame = null;
+        let currentUser = null, userData = null, currentGame = null, rawStats = null;
 
         const fmt = x => {
             if (x >= 1e9) return (x / 1e9).toFixed(1) + 'B';
@@ -221,12 +224,13 @@ const html = `<!DOCTYPE html>
                 const d = await fetch("/api/get-stats?uid=" + r.universeId).then(res => res.json());
                 const g = d.game;
                 currentGame = { id, name: g.name };
+                rawStats = { name: g.name, playing: fmt(g.playing), visits: fmt(g.visits) };
                 
                 document.getElementById('homeUI').style.display = 'none';
                 document.getElementById('results').style.display = 'flex';
                 document.getElementById('gTitle').innerText = g.name;
-                document.getElementById('vPlay').innerText = fmt(g.playing);
-                document.getElementById('vVisit').innerText = fmt(g.visits);
+                document.getElementById('vPlay').innerText = rawStats.playing;
+                document.getElementById('vVisit').innerText = rawStats.visits;
                 document.getElementById('vRate').innerText = Math.round((d.votes.upVotes / (d.votes.upVotes + d.votes.downVotes)) * 100) + "%";
                 document.getElementById('gDesc').innerText = g.description;
                 document.getElementById('gPlay').href = "https://www.roblox.com/games/" + id;
@@ -242,6 +246,11 @@ const html = `<!DOCTYPE html>
                 btn.innerText = 'Scan';
                 loadPopular();
             } catch(e) { btn.innerText = 'Scan'; alert("Error loading game."); }
+        };
+
+        window.shareStats = () => {
+            const text = \`🎮 Game: \${rawStats.name}\\n🚀 Active: \${rawStats.playing}\\n📈 Visits: \${rawStats.visits}\\n\\nScan more on RoStats!\`;
+            navigator.clipboard.writeText(text).then(() => alert("Stats copied to clipboard!"));
         };
 
         function updateHeartState(id) {
@@ -266,7 +275,7 @@ const html = `<!DOCTYPE html>
         };
 
         async function loadPopular() {
-            const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(10));
+            const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(12));
             const snap = await getDocs(q);
             renderChips(snap.docs.map(d => ({id: d.id, name: d.data().name})), 'popContainer');
         }
