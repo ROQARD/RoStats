@@ -5,7 +5,6 @@ export default async function middleware(request) {
 
   if (url.pathname.startsWith("/api/")) {
     const apiHeaders = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
-
     const tryFetch = async (s, e) => {
       for (let p of PROXIES) {
         try {
@@ -46,74 +45,77 @@ const html = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1937157010205619" crossorigin="anonymous"></script>
-    <title>RoStats | Dashboard</title>
+    <title>RoStats | Roblox Analytics</title>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         :root { --bg: #050505; --card: #0c0c0c; --border: #1a1a1a; --accent: #4ade80; --text: #fff; --dim: #71717a; --warn: #ff4444; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        .auth-bar { width: 100%; max-width: 650px; padding: 15px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; font-size: 0.75rem; }
-        .auth-bar input { background: #000; border: 1px solid var(--border); color: white; padding: 6px 10px; border-radius: 8px; outline: none; width: 110px; }
-        .auth-btn { background: var(--accent); color: #000; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .auth-btn:hover { transform: scale(1.05); }
-        .admin-tag { background: #ffdf00; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; display: none; margin-right: 5px; }
+        /* Header & Modal */
+        .header { width: 100%; max-width: 650px; padding: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; }
+        .modal { background: #0f0f0f; border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; }
+        .modal h2 { margin-bottom: 20px; font-weight: 800; }
+        .modal input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; outline: none; }
+        
+        .auth-btn { background: var(--accent); color: #000; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+        .auth-btn.secondary { background: #1a1a1a; color: #fff; border: 1px solid var(--border); }
+        .google-btn { width: 100%; background: #fff; color: #000; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-        .container { width: 100%; max-width: 650px; padding: 20px; padding-bottom: 100px; }
-        .search-area { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 24px; text-align: center; margin-bottom: 15px; }
-        .input-box { display: flex; gap: 10px; background: #000; padding: 6px; border-radius: 14px; border: 1px solid var(--border); }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 10px 15px; font-size: 0.9rem; outline: none; }
-        .scan-btn { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 10px; font-weight: 800; cursor: pointer; }
+        /* Main UI */
+        .container { width: 100%; max-width: 650px; padding: 0 20px 100px; }
+        .search-area { background: var(--card); border: 1px solid var(--border); padding: 35px; border-radius: 28px; text-align: center; margin-bottom: 20px; }
+        .input-box { display: flex; gap: 10px; background: #000; padding: 8px; border-radius: 16px; border: 1px solid var(--border); }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 10px 15px; font-size: 0.95rem; outline: none; }
+        .scan-btn { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 12px; font-weight: 800; cursor: pointer; }
         
-        .nav-wrapper { display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; }
-        .nav-label { font-size: 0.6rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 1.5px; margin-bottom: 8px; }
+        .nav-label { font-size: 0.6rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 1.5px; margin: 20px 0 10px; }
         .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        .nav-chip { background: var(--card); border: 1px solid var(--border); color: var(--dim); padding: 10px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .nav-chip:hover { border-color: var(--accent); color: #fff; }
-
-        .dashboard { display: none; flex-direction: column; gap: 15px; }
+        .nav-chip { background: var(--card); border: 1px solid var(--border); color: var(--dim); padding: 10px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+        
+        .dashboard { display: none; flex-direction: column; gap: 15px; margin-top: 20px; }
         .box { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 20px; text-align: center; position: relative; }
-        .fav-btn { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--dim); transition: 0.2s; }
+        .fav-btn { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--dim); }
         .fav-btn.active { color: var(--warn); }
         
-        .thumb-wrap { width: 120px; height: 120px; border-radius: 18px; margin: 0 auto 15px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .thumb-wrap { width: 110px; height: 110px; border-radius: 20px; margin: 0 auto 15px; overflow: hidden; border: 1px solid var(--border); }
         .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .val { font-size: 1.4rem; font-weight: 800; display: block; }
         .label { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; font-weight: 900; }
 
-        .desc-card { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 22px; text-align: left; }
-        #gDesc { font-size: 0.85rem; color: var(--dim); line-height: 1.6; max-height: 200px; overflow-y: auto; white-space: pre-wrap; padding-right: 10px; }
+        #gDesc { font-size: 0.85rem; color: var(--dim); line-height: 1.6; max-height: 200px; overflow-y: auto; white-space: pre-wrap; text-align: left; }
         
-        /* Admin Panel Modal */
-        #adminPanel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid var(--accent); padding: 30px; border-radius: 20px; z-index: 1000; width: 90%; max-width: 400px; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
-        
-        .footer { position: fixed; bottom: 20px; right: 25px; }
-        .footer-link { color: var(--dim); text-decoration: none; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; }
+        .admin-tag { background: #ffdf00; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; margin-right: 8px; display: none; }
+        .footer { position: fixed; bottom: 20px; right: 25px; opacity: 0.4; font-size: 0.65rem; font-weight: 800; }
     </style>
 </head>
 <body>
-    <div class="overlay" onclick="toggleAdminPanel()"></div>
-    <div id="adminPanel">
-        <h2 style="margin-bottom:15px; color:var(--accent)">Admin Control</h2>
-        <div id="adminList" style="max-height: 300px; overflow-y: auto;"></div>
-        <button class="auth-btn" style="width:100%; margin-top:20px;" onclick="toggleAdminPanel()">Close</button>
+    <div id="authModal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h2 id="modalTitle">Login</h2>
+            <input type="text" id="modalUser" placeholder="Username">
+            <input type="password" id="modalPass" placeholder="Password">
+            <button class="auth-btn" style="width:100%; padding:14px;" id="modalSubmit">Continue</button>
+            <div style="margin: 15px 0; font-size: 0.7rem; color: var(--dim);">OR</div>
+            <button class="auth-btn google-btn" onclick="handleGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Google
+            </button>
+        </div>
     </div>
 
-    <div class="auth-bar">
+    <div class="header">
         <div id="loggedOutUI">
-            <input type="text" id="userIn" placeholder="User">
-            <input type="password" id="passIn" placeholder="Pass">
-            <button class="auth-btn" onclick="handleAuth('login')">Login</button>
-            <button class="auth-btn google-btn" style="background:#fff;" onclick="handleGoogle()">G</button>
+            <button class="auth-btn secondary" onclick="openModal('signup')">Create Account</button>
+            <button class="auth-btn" onclick="openModal('login')">Log In</button>
         </div>
         <div id="loggedInUI" style="display:none; align-items:center;">
             <span class="admin-tag" id="adminTag">ADMIN</span>
-            <span id="displayUser" style="margin-right:10px; font-weight:700;"></span>
-            <button id="adminBtn" class="auth-btn" style="background:#333; color:#fff; display:none; margin-right:5px;" onclick="toggleAdminPanel()">Panel</button>
+            <span id="displayUser" style="margin-right:12px; font-weight:700; font-size:0.8rem;"></span>
+            <button id="adminBtn" class="auth-btn secondary" style="display:none; margin-right:8px;" onclick="toggleAdminPanel()">Panel</button>
             <button class="auth-btn" style="background:var(--warn); color:#fff;" onclick="logout()">Logout</button>
         </div>
     </div>
@@ -122,16 +124,16 @@ const html = `<!DOCTYPE html>
         <div class="search-area">
             <h1 style="font-size: 2.2rem; margin-bottom:20px; letter-spacing:-1px;">Ro<span style="color:var(--accent)">Stats</span></h1>
             <div class="input-box">
-                <input type="text" id="placeId" placeholder="Paste Game Link or ID...">
+                <input type="text" id="placeId" placeholder="Game Link or ID...">
                 <button class="scan-btn" id="scanBtn" onclick="run()" disabled>Scan</button>
             </div>
             <div class="captcha-box" style="margin-top:15px;"><div class="cf-turnstile" data-sitekey="0x4AAAAAACk-FIXxhlsidtFU" data-callback="onCaptcha"></div></div>
         </div>
 
-        <div id="navWrapper" class="nav-wrapper">
-            <div id="popBlock"><div class="nav-label">Popular Globally</div><div id="popContainer" class="chip-group"></div></div>
+        <div id="navWrapper">
+            <div class="nav-label">Popular Globally</div><div id="popContainer" class="chip-group"></div>
             <div id="favBlock" style="display:none;"><div class="nav-label">Your Favorites ❤️</div><div id="favContainer" class="chip-group"></div></div>
-            <div id="recentBlock"><div class="nav-label">Recent Searches</div><div id="recentContainer" class="chip-group"></div></div>
+            <div class="nav-label">Recent Searches</div><div id="recentContainer" class="chip-group"></div>
         </div>
 
         <div id="results" class="dashboard">
@@ -146,14 +148,11 @@ const html = `<!DOCTYPE html>
                 <div class="box"><span class="label">Visits</span><span class="val" id="vVisit">-</span></div>
                 <div class="box"><span class="label">Rating</span><span class="val" id="vRate">-</span></div>
             </div>
-            <div class="desc-card">
-                <div class="nav-label" style="margin-bottom:10px; color:var(--text)">Full Description</div>
-                <div id="gDesc"></div>
-            </div>
+            <div class="box"><div class="nav-label" style="margin-top:0; color:var(--text)">Full Description</div><div id="gDesc"></div></div>
         </div>
     </div>
 
-    <div class="footer"><a href="https://www.roblox.com/users/9461867215/profile" class="footer-link" target="_blank">BY ROQARD</a></div>
+    <div class="footer"><a href="https://www.roblox.com/users/9461867215/profile" style="color:inherit; text-decoration:none;" target="_blank">BY ROQARD</a></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
@@ -172,62 +171,79 @@ const html = `<!DOCTYPE html>
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let currentUser = null;
-        let userData = null;
-        let currentGame = null;
+        let currentUser = null, userData = null, currentGame = null, authMode = 'login';
 
-        // --- Auth & Admin Check ---
+        // --- Modal Control ---
+        window.openModal = (mode) => {
+            authMode = mode;
+            document.getElementById('modalTitle').innerText = mode === 'signup' ? 'Create Account' : 'Login';
+            document.getElementById('modalSubmit').innerText = mode === 'signup' ? 'Create Account' : 'Login';
+            document.getElementById('modalSubmit').onclick = () => handleAuth(mode);
+            document.getElementById('authModal').style.display = 'flex';
+        };
+        window.closeModal = (e) => { document.getElementById('authModal').style.display = 'none'; };
+
+        // --- Auth & Google ---
         window.handleAuth = async (mode) => {
-            const user = document.getElementById('userIn').value;
-            const pass = document.getElementById('passIn').value;
-            if(!user || !pass) return;
+            const user = document.getElementById('modalUser').value;
+            const pass = document.getElementById('modalPass').value;
+            if(!user || pass.length < 6) return alert("Username required and password must be 6+ characters.");
             const fakeEmail = user + "@rostats.internal";
             try {
                 if(mode === 'signup') await createUserWithEmailAndPassword(auth, fakeEmail, pass);
                 else await signInWithEmailAndPassword(auth, fakeEmail, pass);
-            } catch(e) { alert("Auth failed. If signing up, password must be 6+ chars."); }
+                closeModal();
+            } catch(e) { alert("Error: " + e.message); }
         };
 
-        window.handleGoogle = () => signInWithPopup(auth, new GoogleAuthProvider());
+        window.handleGoogle = async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                closeModal();
+            } catch(e) { alert("Google Sign-In failed."); }
+        };
+
         window.logout = () => signOut(auth);
 
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
             if(user) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                userData = userDoc.data() || { recents: [], favorites: [] };
-                if(!userDoc.exists()) await setDoc(doc(db, "users", user.uid), userData);
-
+                const userDocRef = doc(db, "users", user.uid);
+                const snap = await getDoc(userDocRef);
+                if(!snap.exists()) {
+                    userData = { recents: [], favorites: [], role: 'user' };
+                    await setDoc(userDocRef, userData);
+                } else {
+                    userData = snap.data();
+                }
                 document.getElementById('loggedOutUI').style.display = 'none';
                 document.getElementById('loggedInUI').style.display = 'flex';
                 document.getElementById('displayUser').innerText = user.displayName || user.email.split('@')[0];
-                
                 if(userData.role === 'admin') {
                     document.getElementById('adminBtn').style.display = 'block';
                     document.getElementById('adminTag').style.display = 'inline-block';
                 }
                 renderUserCollections();
             } else {
-                document.getElementById('loggedOutUI').style.display = 'block';
+                document.getElementById('loggedOutUI').style.display = 'flex';
                 document.getElementById('loggedInUI').style.display = 'none';
             }
         });
 
-        // --- UI & Stats Logic ---
-        window.onCaptcha = (token) => { window.captchaToken = token; document.getElementById('scanBtn').disabled = false; };
+        // --- App Logic ---
+        window.onCaptcha = (t) => { window.captchaToken = t; document.getElementById('scanBtn').disabled = false; };
 
         window.run = async () => {
             const raw = document.getElementById('placeId').value;
             const id = raw.match(/games\\/(\\d+)/) ? raw.match(/games\\/(\\d+)/)[1] : raw.replace(/\\D/g, '');
-            const scanBtn = document.getElementById('scanBtn');
-            scanBtn.innerText = '...';
-            
+            const btn = document.getElementById('scanBtn');
+            btn.innerText = '...';
             try {
                 const r = await fetch("/api/validate-id?id=" + id).then(res => res.json());
                 const d = await fetch("/api/get-stats?uid=" + r.universeId).then(res => res.json());
                 const g = d.game;
                 currentGame = { id, name: g.name };
-
                 document.getElementById('navWrapper').style.display = 'none';
                 document.getElementById('results').style.display = 'flex';
                 document.getElementById('gTitle').innerText = g.name;
@@ -238,51 +254,31 @@ const html = `<!DOCTYPE html>
                 document.getElementById('gThumb').src = "https://www.roblox.com/asset-thumbnail/image?assetId=" + id + "&width=420&height=420&format=png";
                 document.getElementById('gOwner').innerText = "By " + g.creator.name;
                 document.getElementById('gOwner').href = "https://www.roblox.com/users/" + g.creator.id;
-
-                // Sync Heart State
-                const isFav = userData?.favorites?.some(x => x.id === id);
-                document.getElementById('heartBtn').classList.toggle('active', isFav);
-
-                // Update Database
-                if(currentUser) {
-                    await updateDoc(doc(db, "users", currentUser.uid), { recents: arrayUnion(currentGame) });
-                }
+                document.getElementById('heartBtn').classList.toggle('active', userData?.favorites?.some(x => x.id === id));
+                if(currentUser) await updateDoc(doc(db, "users", currentUser.uid), { recents: arrayUnion(currentGame) });
                 await setDoc(doc(db, "popular", id), { name: g.name, count: increment(1), hidden: false }, { merge: true });
-                scanBtn.innerText = 'Scan';
-            } catch(e) { scanBtn.innerText = 'Scan'; alert("Game not found or private."); }
+                btn.innerText = 'Scan';
+            } catch(e) { btn.innerText = 'Scan'; alert("Error loading game."); }
         };
 
-        // --- Favorites & Recents ---
         window.toggleFavorite = async () => {
-            if(!currentUser) return alert("Login to save favorites!");
-            const btn = document.getElementById('heartBtn');
-            const isFav = btn.classList.contains('active');
-            
-            if(isFav) {
-                await updateDoc(doc(db, "users", currentUser.uid), { favorites: arrayRemove(userData.favorites.find(x => x.id === currentGame.id)) });
-                btn.classList.remove('active');
-            } else {
-                await updateDoc(doc(db, "users", currentUser.uid), { favorites: arrayUnion(currentGame) });
-                btn.classList.add('active');
-            }
-            // Refresh local data
-            const freshDoc = await getDoc(doc(db, "users", currentUser.uid));
-            userData = freshDoc.data();
+            if(!currentUser) return openModal('login');
+            const isFav = document.getElementById('heartBtn').classList.toggle('active');
+            await updateDoc(doc(db, "users", currentUser.uid), { favorites: isFav ? arrayUnion(currentGame) : arrayRemove(userData.favorites.find(x => x.id === currentGame.id)) });
+            const snap = await getDoc(doc(db, "users", currentUser.uid));
+            userData = snap.data();
+            renderUserCollections();
         };
-
-        function renderUserCollections() {
-            if(userData.favorites?.length > 0) {
-                document.getElementById('favBlock').style.display = 'block';
-                renderChips(userData.favorites, 'favContainer');
-            }
-            if(userData.recents?.length > 0) renderChips(userData.recents.slice(0,5), 'recentContainer');
-        }
 
         async function loadPopular() {
             const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(6));
             const snap = await getDocs(q);
-            const list = snap.docs.map(d => ({id: d.id, name: d.data().name}));
-            renderChips(list, 'popContainer');
+            renderChips(snap.docs.map(d => ({id: d.id, name: d.data().name})), 'popContainer');
+        }
+
+        function renderUserCollections() {
+            if(userData.favorites?.length) { document.getElementById('favBlock').style.display = 'block'; renderChips(userData.favorites, 'favContainer'); }
+            if(userData.recents?.length) renderChips(userData.recents.slice(-5).reverse(), 'recentContainer');
         }
 
         function renderChips(list, target) {
@@ -296,34 +292,6 @@ const html = `<!DOCTYPE html>
                 container.appendChild(c);
             });
         }
-
-        // --- Admin Functions ---
-        window.toggleAdminPanel = async () => {
-            const panel = document.getElementById('adminPanel');
-            const overlay = document.querySelector('.overlay');
-            const isVisible = panel.style.display === 'block';
-            panel.style.display = isVisible ? 'none' : 'block';
-            overlay.style.display = isVisible ? 'none' : 'block';
-
-            if(!isVisible) {
-                const snap = await getDocs(query(collection(db, "popular"), orderBy("count", "desc"), limit(20)));
-                const list = document.getElementById('adminList');
-                list.innerHTML = '';
-                snap.forEach(d => {
-                    const item = d.data();
-                    const div = document.createElement('div');
-                    div.style = "display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #222; font-size:0.8rem;";
-                    div.innerHTML = \`<span>\${item.name}</span><button onclick="hideGame('\${d.id}', \${item.hidden})" style="color:\${item.hidden?'#4ade80':'#ff4444'}; background:none; border:none; cursor:pointer; font-weight:800;">\${item.hidden?'SHOW':'HIDE'}</button>\`;
-                    list.appendChild(div);
-                });
-            }
-        };
-
-        window.hideGame = async (id, currentState) => {
-            await updateDoc(doc(db, "popular", id), { hidden: !currentState });
-            toggleAdminPanel(); // Refresh
-            loadPopular();
-        };
 
         loadPopular();
     </script>
