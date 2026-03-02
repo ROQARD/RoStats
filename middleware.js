@@ -3,7 +3,7 @@ const PROXIES = ["rotunnel.com", "roproxy.com", "rbxproxy.com"];
 export default async function middleware(request) {
   const url = new URL(request.url);
 
-  // 1. API Routes
+  // 1. Handle API Routes
   if (url.pathname.startsWith("/api/")) {
     const apiHeaders = { 
       "Content-Type": "application/json", 
@@ -87,8 +87,10 @@ const html = `<!DOCTYPE html>
         .nav-wrapper { width: 100%; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .nav-label { font-size: 0.55rem; color: #444; text-transform: uppercase; font-weight: 900; width: 100%; margin-bottom: 4px; letter-spacing: 1px; }
         .chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
-        .nav-chip { background: var(--card); border: 1px solid var(--border); color: var(--dim); padding: 8px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .nav-chip { background: var(--card); border: 1px solid var(--border); color: var(--dim); padding: 8px 14px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; position: relative; }
         .nav-chip:hover { border-color: var(--accent); color: #fff; }
+        .del-recent { color: var(--warn); font-size: 1.2rem; line-height: 1; margin-left: 5px; opacity: 0.5; }
+        .del-recent:hover { opacity: 1; }
         .dashboard { display: none; flex-direction: column; gap: 12px; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 18px; position: relative; }
         .thumb-wrap { width: 120px; height: 120px; border-radius: 18px; background: #111; margin: 0 auto 15px; overflow: hidden; display: none; border: 1px solid var(--border); }
@@ -105,7 +107,7 @@ const html = `<!DOCTYPE html>
         .copy-btn { background: #111; color: #fff; border: 1px solid var(--border); }
         .error-msg { color: var(--warn); font-size: 0.65rem; font-weight: 800; margin-top: 10px; display: none; }
         .footer { position: fixed; bottom: 20px; right: 25px; z-index: 100; }
-        .footer-link { color: var(--dim); text-decoration: none; font-size: 0.65rem; font-weight: 800; letter-spacing: 1.5px; opacity: 0.4; transition: 0.3s; }
+        .footer-link { color: var(--dim); text-decoration: none; font-size: 0.65rem; font-weight: 800; letter-spacing: 1.5px; opacity: 0.4; }
         .footer-link:hover { opacity: 1; color: var(--accent); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -123,6 +125,7 @@ const html = `<!DOCTYPE html>
             </div>
             <div id="errorBox" class="error-msg">EXPERIENCE NOT FOUND</div>
         </div>
+        
         <div id="navWrapper" class="nav-wrapper">
             <div id="recentBlock" style="display:none">
                 <div class="nav-label">Recent</div>
@@ -131,11 +134,11 @@ const html = `<!DOCTYPE html>
             <div id="recomBlock">
                 <div class="nav-label">Recommended</div>
                 <div id="recomContainer" class="chip-group">
-                    <div class="nav-chip" onclick="quickScan('109612380137176')">Doors</div>
-                    <div class="nav-chip" onclick="quickScan('114407982270919')">Dress To Impress</div>
+                    <div class="nav-chip">Loading...</div>
                 </div>
             </div>
         </div>
+
         <div id="results" class="dashboard">
             <div class="box" style="text-align:center">
                 <div id="thumbWrap" class="thumb-wrap"><img id="gThumb" src=""></div>
@@ -169,11 +172,66 @@ const html = `<!DOCTYPE html>
         </div>
     </div>
     <div class="footer"><a href="https://www.roblox.com/users/9461867215/profile" class="footer-link" target="_blank">BY ROQARD</a></div>
+
     <script>
         let captchaToken = null;
         const fmt = x => x >= 1e6 ? (x/1e6).toFixed(1)+'M' : x >= 1e3 ? (x/1e3).toFixed(1)+'K' : x.toLocaleString();
+
         function onCaptcha(token) { captchaToken = token; document.getElementById('scanBtn').disabled = false; }
+
+        // --- Recents System ---
+        function saveRecent(id, name) {
+            let list = JSON.parse(localStorage.getItem('rostats_recent') || '[]');
+            list = list.filter(x => x.id !== id);
+            list.unshift({id, name});
+            if (list.length > 5) list.pop();
+            localStorage.setItem('rostats_recent', JSON.stringify(list));
+            renderRecents();
+        }
+
+        function renderRecents() {
+            const container = document.getElementById('recentContainer');
+            const block = document.getElementById('recentBlock');
+            const list = JSON.parse(localStorage.getItem('rostats_recent') || '[]');
+            if (list.length === 0) { block.style.display = 'none'; return; }
+            block.style.display = 'block';
+            container.innerHTML = '';
+            list.forEach(item => {
+                const chip = document.createElement('div');
+                chip.className = 'nav-chip';
+                chip.innerHTML = \`\${item.name} <span class="del-recent" onclick="event.stopPropagation(); removeRecent('\${item.id}')">×</span>\`;
+                chip.onclick = () => quickScan(item.id);
+                container.appendChild(chip);
+            });
+        }
+
+        function removeRecent(id) {
+            let list = JSON.parse(localStorage.getItem('rostats_recent') || '[]');
+            list = list.filter(x => x.id !== id);
+            localStorage.setItem('rostats_recent', JSON.stringify(list));
+            renderRecents();
+        }
+
+        // --- Recommended (API Driven) ---
+        async function loadRecommended() {
+            const games = [
+                { id: '109612380137176', name: 'Doors' },
+                { id: '114407982270919', name: 'Dress To Impress' },
+                { id: '113010419266710', name: 'Blox Fruits' }
+            ];
+            const container = document.getElementById('recomContainer');
+            container.innerHTML = '';
+            for (const g of games) {
+                const chip = document.createElement('div');
+                chip.className = 'nav-chip';
+                chip.innerText = g.name;
+                chip.onclick = () => quickScan(g.id);
+                container.appendChild(chip);
+            }
+        }
+
         function quickScan(id) { document.getElementById('placeId').value = id; run(); }
+
         function copyStats() {
             const t = document.getElementById('gTitle').innerText;
             const p = document.getElementById('vPlay').innerText;
@@ -181,17 +239,23 @@ const html = `<!DOCTYPE html>
             const b = document.querySelector('.copy-btn'); b.innerText = "COPIED";
             setTimeout(() => { b.innerText = "COPY SUMMARY"; }, 2000);
         }
+
         async function run() { 
             if(!captchaToken) return;
             const raw = document.getElementById('placeId').value.trim();
             const id = raw.match(/games\\/(\\d+)/) ? raw.match(/games\\/(\\d+)/)[1] : raw.replace(/\\D/g, '');
             const scanBtn = document.getElementById('scanBtn');
+            const errorBox = document.getElementById('errorBox');
+            errorBox.style.display = 'none';
             scanBtn.innerText = '...';
             try {
                 const r = await fetch("/api/validate-id?id=" + id);
                 const v = await r.json();
+                if (v.error) throw new Error();
                 const d = await fetch("/api/get-stats?uid=" + v.universeId).then(res => res.json());
                 const g = d.game; const vt = d.votes;
+
+                saveRecent(id, g.name);
                 document.getElementById('navWrapper').style.display = 'none';
                 document.getElementById('results').style.display = 'flex';
                 document.getElementById('gTitle').innerText = g.name;
@@ -212,9 +276,12 @@ const html = `<!DOCTYPE html>
                 document.getElementById('thumbWrap').style.display = 'block';
                 scanBtn.innerText = 'SCAN';
             } catch(e) { 
-                document.getElementById('errorBox').style.display = 'block'; 
+                errorBox.style.display = 'block'; 
                 scanBtn.innerText = 'SCAN';
             }
         }
+
+        renderRecents();
+        loadRecommended();
     </script>
 </body></html>`;
