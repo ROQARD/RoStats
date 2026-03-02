@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Screen Embed</title>
+    <style>
+        /* Remove default browser spacing */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Prevents double scrollbars */
+        }
+
+        /* Make the iframe fill the entire screen */
+        .full-page-embed {
+            border: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <iframe 
+        src="https://rostats.roqard.workers.dev/" 
+        class="full-page-embed"
+        allow="autoplay; encrypted-media; fullscreen" 
+        allowfullscreen>
+    </iframe>
+
+</body>
+</html>
