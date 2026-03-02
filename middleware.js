@@ -52,33 +52,36 @@ const html = `<!DOCTYPE html>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
-        /* Login UI Fix */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal { background: #111; border: 1px solid var(--border); padding: 30px; border-radius: 20px; width: 90%; max-width: 360px; }
-        .modal h2 { margin-bottom: 20px; font-weight: 800; text-align: center; }
-        .modal input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; outline: none; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal { background: #111; border: 1px solid var(--border); padding: 35px; border-radius: 24px; width: 90%; max-width: 360px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .modal h2 { margin-bottom: 25px; font-weight: 800; text-align: center; font-size: 1.5rem; }
+        .modal input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; margin-bottom: 12px; outline: none; transition: 0.2s; }
+        .modal input:focus { border-color: var(--accent); }
         
-        .header { width: 100%; max-width: 800px; padding: 20px; display: flex; justify-content: flex-end; }
-        .btn { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+        .header { width: 100%; max-width: 800px; padding: 25px; display: flex; justify-content: flex-end; }
+        .btn { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: 0.2s; text-align: center; }
         .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border); }
-        .btn:hover { opacity: 0.8; }
+        .btn:hover { transform: translateY(-1px); opacity: 0.9; }
+        .btn:active { transform: translateY(0); }
 
-        .container { width: 100%; max-width: 800px; padding: 20px 20px 100px; }
+        .container { width: 100%; max-width: 800px; padding: 0 20px 100px; }
         .search-section { text-align: center; margin-bottom: 40px; }
-        .search-bar { display: flex; gap: 10px; background: var(--card); padding: 8px; border-radius: 15px; border: 1px solid var(--border); max-width: 500px; margin: 20px auto; }
-        .search-bar input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; }
+        .search-bar { display: flex; gap: 10px; background: var(--card); padding: 8px; border-radius: 18px; border: 1px solid var(--border); max-width: 500px; margin: 25px auto; transition: 0.3s; }
+        .search-bar:focus-within { border-color: var(--accent); }
+        .search-bar input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-size: 1rem; }
 
         .dashboard { display: none; flex-direction: column; gap: 15px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 18px; }
-        .stat-label { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
-        .stat-value { font-size: 1.4rem; font-weight: 700; display: block; margin-top: 5px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 20px; transition: 0.2s; }
+        .stat-label { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; font-weight: 800; letter-spacing: 1.2px; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; display: block; margin-top: 8px; }
 
-        .chip-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .chip { background: var(--card); border: 1px solid var(--border); padding: 8px 15px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; }
-        .section-label { font-size: 0.7rem; font-weight: 800; color: #444; text-transform: uppercase; margin-top: 30px; }
+        .chip-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .chip { background: var(--card); border: 1px solid var(--border); padding: 10px 18px; border-radius: 12px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .chip:hover { border-color: var(--accent); background: #151515; }
+        .section-label { font-size: 0.75rem; font-weight: 800; color: #444; text-transform: uppercase; margin-top: 40px; letter-spacing: 1px; }
 
-        .footer { position: fixed; bottom: 20px; right: 20px; font-size: 0.7rem; font-weight: 800; opacity: 0.5; }
+        .footer { position: fixed; bottom: 25px; right: 25px; font-size: 0.75rem; font-weight: 800; opacity: 0.4; }
         a { color: inherit; text-decoration: none; }
     </style>
 </head>
@@ -95,38 +98,38 @@ const html = `<!DOCTYPE html>
     <div class="header">
         <div id="loggedOutUI">
             <button class="btn btn-outline" onclick="openAuth('login')">Login</button>
-            <button class="btn" onclick="openAuth('signup')" style="margin-left:8px;">Sign Up</button>
+            <button class="btn" onclick="openAuth('signup')" style="margin-left:10px;">Sign Up</button>
         </div>
         <div id="loggedInUI" style="display:none;">
-            <span id="userDisplay" style="margin-right:15px; font-weight:700; color:var(--accent);"></span>
+            <span id="userDisplay" style="margin-right:20px; font-weight:800; color:var(--accent); font-size:0.9rem;"></span>
             <button class="btn btn-outline" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <div class="container">
         <div class="search-section">
-            <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1.5px;">RoStats</h1>
+            <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -2px;">RoStats</h1>
             <div class="search-bar">
-                <input type="text" id="placeId" placeholder="Game ID or Link">
+                <input type="text" id="placeId" placeholder="Enter Game ID or Link">
                 <button class="btn" id="scanBtn" onclick="run()" disabled>Scan</button>
             </div>
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAACk-FIXxhlsidtFU" data-callback="onCaptcha"></div>
+            <div style="display:flex; justify-content:center;"><div class="cf-turnstile" data-sitekey="0x4AAAAAACk-FIXxhlsidtFU" data-callback="onCaptcha"></div></div>
         </div>
 
         <div id="homeUI">
-            <div class="section-label">Global Popular</div>
+            <div class="section-label">Most Popular</div>
             <div id="popContainer" class="chip-group"></div>
             <div id="favBlock" style="display:none;">
-                <div class="section-label">Favorites</div>
+                <div class="section-label">Your Favorites</div>
                 <div id="favContainer" class="chip-group"></div>
             </div>
         </div>
 
         <div id="results" class="dashboard">
-            <div class="stat-card" style="text-align:center;">
-                <h2 id="gTitle">-</h2>
-                <p id="gOwner" style="color:var(--accent); font-weight:700; margin-top:5px;"></p>
-                <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+            <div class="stat-card" style="text-align:center; border-bottom: 2px solid var(--border);">
+                <h2 id="gTitle" style="font-size: 2rem; letter-spacing: -0.5px;">-</h2>
+                <p id="gOwner" style="color:var(--accent); font-weight:700; margin-top:8px; font-size:1rem;"></p>
+                <div style="margin-top:25px; display:flex; gap:12px; justify-content:center;">
                     <a id="gPlay" target="_blank" class="btn">Play Game</a>
                     <button class="btn btn-outline" id="favBtn" onclick="toggleFavorite()">Favorite</button>
                 </div>
@@ -137,15 +140,15 @@ const html = `<!DOCTYPE html>
                 <div class="stat-card"><span class="stat-label">Est. Robux Earned</span><span class="stat-value" id="vRev" style="color:var(--accent);">-</span></div>
                 <div class="stat-card"><span class="stat-label">Rating</span><span class="stat-value" id="vRate">-</span></div>
                 <div class="stat-card"><span class="stat-label">Favorites</span><span class="stat-value" id="vFav">-</span></div>
-                <div class="stat-card"><span class="stat-label">Max Servers</span><span class="stat-value" id="vMax">-</span></div>
-                <div class="stat-card"><span class="stat-label">Created</span><span class="stat-value" id="vCreated" style="font-size:1rem;">-</span></div>
-                <div class="stat-card"><span class="stat-label">Last Updated</span><span class="stat-value" id="vUpdated" style="font-size:1rem;">-</span></div>
+                <div class="stat-card"><span class="stat-label">Max Players per Server</span><span class="stat-value" id="vMax">-</span></div>
+                <div class="stat-card"><span class="stat-label">Creation Date</span><span class="stat-value" id="vCreated" style="font-size:1.1rem;">-</span></div>
+                <div class="stat-card"><span class="stat-label">Last Updated</span><span class="stat-value" id="vUpdated" style="font-size:1.1rem;">-</span></div>
             </div>
             <div class="stat-card">
-                <span class="stat-label">Description</span>
-                <p id="gDesc" style="font-size:0.85rem; color:#aaa; margin-top:10px; white-space:pre-wrap;"></p>
+                <span class="stat-label">Game Description</span>
+                <p id="gDesc" style="font-size:0.9rem; color:#bbb; margin-top:15px; white-space:pre-wrap; line-height:1.6;"></p>
             </div>
-            <button class="btn btn-outline" onclick="location.reload()">New Search</button>
+            <button class="btn btn-outline" style="padding:15px;" onclick="location.reload()">Start New Search</button>
         </div>
     </div>
 
@@ -174,20 +177,22 @@ const html = `<!DOCTYPE html>
         const fmt = x => x >= 1e9 ? (x/1e9).toFixed(1)+'B' : x >= 1e6 ? (x/1e6).toFixed(1)+'M' : x >= 1e3 ? (x/1e3).toFixed(1)+'K' : x.toLocaleString();
 
         window.openAuth = (m) => {
-            document.getElementById('modalTitle').innerText = m === 'signup' ? 'Create Account' : 'Login';
+            document.getElementById('modalTitle').innerText = m === 'signup' ? 'Sign Up' : 'Login';
             document.getElementById('mSubmit').onclick = () => handleAuth(m);
             document.getElementById('authModal').style.display = 'flex';
         };
         window.closeModal = () => document.getElementById('authModal').style.display = 'none';
 
         async function handleAuth(mode) {
-            const u = document.getElementById('mUser').value.trim().toLowerCase() + "@rostats.internal";
+            const uInput = document.getElementById('mUser').value.trim();
             const p = document.getElementById('mPass').value;
+            if(!uInput || p.length < 6) return alert("Enter valid credentials (min 6 chars for password)");
+            const u = uInput.toLowerCase() + "@rostats.internal";
             try {
                 if(mode === 'signup') await createUserWithEmailAndPassword(auth, u, p);
                 else await signInWithEmailAndPassword(auth, u, p);
                 closeModal();
-            } catch(e) { alert(e.message); }
+            } catch(e) { alert("Error: " + e.message); }
         }
 
         window.logout = () => signOut(auth).then(() => location.reload());
@@ -210,9 +215,10 @@ const html = `<!DOCTYPE html>
         window.run = async () => {
             const input = document.getElementById('placeId').value;
             const id = input.match(/\\d+/) ? input.match(/\\d+/)[0] : "";
-            if(!id) return;
+            if(!id) return alert("Please enter a valid Game ID or Link");
             currentId = id;
-            document.getElementById('scanBtn').innerText = "...";
+            const btn = document.getElementById('scanBtn');
+            btn.innerText = "Analyzing...";
             try {
                 const val = await fetch("/api/validate-id?id="+id).then(r => r.json());
                 const data = await fetch("/api/get-stats?uid="+val.universeId).then(r => r.json());
@@ -224,7 +230,8 @@ const html = `<!DOCTYPE html>
                 document.getElementById('gOwner').innerText = "By " + g.creator.name;
                 document.getElementById('vPlay').innerText = fmt(g.playing);
                 document.getElementById('vVisit').innerText = fmt(g.visits);
-                document.getElementById('vRev').innerText = "R$ " + fmt(Math.floor(g.visits * 0.7));
+                // Updated conservative multiplier: 0.4 per visit
+                document.getElementById('vRev').innerText = "R$ " + fmt(Math.floor(g.visits * 0.4));
                 document.getElementById('vRate').innerText = Math.round((data.votes.upVotes/(data.votes.upVotes+data.votes.downVotes))*100) + "%";
                 document.getElementById('vFav').innerText = fmt(data.favorites);
                 document.getElementById('vMax').innerText = g.maxPlayers;
@@ -235,8 +242,8 @@ const html = `<!DOCTYPE html>
                 
                 await setDoc(doc(db, "popular", id), { name: g.name, count: increment(1), hidden: false }, { merge: true });
                 updateFavBtn();
-            } catch(e) { alert("Game not found"); }
-            document.getElementById('scanBtn').innerText = "Scan";
+            } catch(e) { alert("Data fetch failed. Check Game ID."); }
+            btn.innerText = "Scan";
         };
 
         window.toggleFavorite = async () => {
@@ -271,20 +278,25 @@ const html = `<!DOCTYPE html>
                     c.onclick = () => { document.getElementById('placeId').value = f.id; window.run(); };
                     container.appendChild(c);
                 });
+            } else {
+                document.getElementById('favBlock').style.display = 'none';
             }
         }
 
         async function loadPopular() {
-            const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(12));
-            const snap = await getDocs(q);
-            const container = document.getElementById('popContainer');
-            snap.forEach(d => {
-                const c = document.createElement('div');
-                c.className = 'chip';
-                c.innerText = d.data().name;
-                c.onclick = () => { document.getElementById('placeId').value = d.id; window.run(); };
-                container.appendChild(c);
-            });
+            try {
+                const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(12));
+                const snap = await getDocs(q);
+                const container = document.getElementById('popContainer');
+                container.innerHTML = '';
+                snap.forEach(d => {
+                    const c = document.createElement('div');
+                    c.className = 'chip';
+                    c.innerText = d.data().name;
+                    c.onclick = () => { document.getElementById('placeId').value = d.id; window.run(); };
+                    container.appendChild(c);
+                });
+            } catch(e) { console.error("Index load pending..."); }
         }
         loadPopular();
     </script>
