@@ -76,7 +76,10 @@ const html = `<!DOCTYPE html>
         .desc-container { text-align: left; background: #000; padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
         #gDesc { font-size: 0.9rem; color: #bbb; line-height: 1.6; max-height: 350px; overflow-y: auto; white-space: pre-wrap; }
 
-        .nav-label { font-size: 0.65rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; margin: 30px 0 12px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin: 30px 0 12px; }
+        .nav-label { font-size: 0.65rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; }
+        .clear-link { font-size: 0.65rem; color: var(--warn); cursor: pointer; font-weight: 800; text-transform: uppercase; }
+        
         .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .nav-chip { background: var(--card); border: 1px solid var(--border); color: #ccc; padding: 10px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
 
@@ -117,9 +120,21 @@ const html = `<!DOCTYPE html>
         </div>
 
         <div id="homeUI">
-            <div class="nav-label">🔥 Most Popular</div><div id="popContainer" class="chip-group"></div>
-            <div id="favBlock" style="display:none;"><div class="nav-label">Favorites ❤️</div><div id="favContainer" class="chip-group"></div></div>
-            <div class="nav-label">Recent Searches</div><div id="recentContainer" class="chip-group"></div>
+            <div class="section-header"><div class="nav-label">🔥 Most Popular</div></div>
+            <div id="popContainer" class="chip-group"></div>
+            
+            <div id="favBlock" style="display:none;">
+                <div class="section-header"><div class="nav-label">Favorites ❤️</div></div>
+                <div id="favContainer" class="chip-group"></div>
+            </div>
+            
+            <div id="recentBlock">
+                <div class="section-header">
+                    <div class="nav-label">Recent Searches</div>
+                    <span class="clear-link" id="clearRecentBtn" style="display:none;" onclick="clearRecents()">Clear All</span>
+                </div>
+                <div id="recentContainer" class="chip-group"></div>
+            </div>
         </div>
 
         <div id="results" class="dashboard">
@@ -274,18 +289,36 @@ const html = `<!DOCTYPE html>
             renderUserCollections();
         };
 
+        window.clearRecents = async () => {
+            if(!currentUser) return;
+            if(confirm("Clear your search history?")) {
+                await updateDoc(doc(db, "users", currentUser.uid), { recents: [] });
+                userData.recents = [];
+                renderUserCollections();
+            }
+        };
+
         async function loadPopular() {
-            const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(12));
-            const snap = await getDocs(q);
-            renderChips(snap.docs.map(d => ({id: d.id, name: d.data().name})), 'popContainer');
+            try {
+                const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(12));
+                const snap = await getDocs(q);
+                renderChips(snap.docs.map(d => ({id: d.id, name: d.data().name})), 'popContainer');
+            } catch(e) { console.error("Index required for Popular list."); }
         }
 
         function renderUserCollections() {
             if(userData?.favorites?.length) { 
                 document.getElementById('favBlock').style.display = 'block'; 
                 renderChips(userData.favorites, 'favContainer'); 
+            } else { document.getElementById('favBlock').style.display = 'none'; }
+
+            if(userData?.recents?.length) {
+                document.getElementById('clearRecentBtn').style.display = 'block';
+                renderChips(userData.recents.slice(-8).reverse(), 'recentContainer');
+            } else {
+                document.getElementById('recentContainer').innerHTML = '';
+                document.getElementById('clearRecentBtn').style.display = 'none';
             }
-            if(userData?.recents?.length) renderChips(userData.recents.slice(-8).reverse(), 'recentContainer');
         }
 
         function renderChips(list, target) {
