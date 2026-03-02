@@ -53,33 +53,30 @@ const html = `<!DOCTYPE html>
         body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal { background: #111; border: 1px solid var(--border); padding: 35px; border-radius: 24px; width: 90%; max-width: 360px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .modal { background: #111; border: 1px solid var(--border); padding: 35px; border-radius: 24px; width: 90%; max-width: 360px; }
         .modal h2 { margin-bottom: 25px; font-weight: 800; text-align: center; font-size: 1.5rem; }
-        .modal input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; margin-bottom: 12px; outline: none; transition: 0.2s; }
-        .modal input:focus { border-color: var(--accent); }
+        .modal input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; margin-bottom: 12px; outline: none; }
         
         .header { width: 100%; max-width: 800px; padding: 25px; display: flex; justify-content: flex-end; }
-        .btn { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: 0.2s; text-align: center; }
+        .btn { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: 0.2s; text-align: center; text-decoration: none; }
         .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border); }
         .btn:hover { transform: translateY(-1px); opacity: 0.9; }
-        .btn:active { transform: translateY(0); }
 
         .container { width: 100%; max-width: 800px; padding: 0 20px 100px; }
         .search-section { text-align: center; margin-bottom: 40px; }
-        .search-bar { display: flex; gap: 10px; background: var(--card); padding: 8px; border-radius: 18px; border: 1px solid var(--border); max-width: 500px; margin: 25px auto; transition: 0.3s; }
-        .search-bar:focus-within { border-color: var(--accent); }
+        .search-bar { display: flex; gap: 10px; background: var(--card); padding: 8px; border-radius: 18px; border: 1px solid var(--border); max-width: 500px; margin: 25px auto; }
         .search-bar input { flex: 1; background: transparent; border: none; color: #fff; padding: 10px; outline: none; font-size: 1rem; }
 
         .dashboard { display: none; flex-direction: column; gap: 15px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 20px; transition: 0.2s; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 20px; }
         .stat-label { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; font-weight: 800; letter-spacing: 1.2px; }
         .stat-value { font-size: 1.6rem; font-weight: 700; display: block; margin-top: 8px; }
 
         .chip-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
         .chip { background: var(--card); border: 1px solid var(--border); padding: 10px 18px; border-radius: 12px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; font-weight: 600; }
-        .chip:hover { border-color: var(--accent); background: #151515; }
-        .section-label { font-size: 0.75rem; font-weight: 800; color: #444; text-transform: uppercase; margin-top: 40px; letter-spacing: 1px; }
+        .chip:hover { border-color: var(--accent); }
+        .section-label { font-size: 0.75rem; font-weight: 800; color: #444; text-transform: uppercase; margin-top: 40px; }
 
         .footer { position: fixed; bottom: 25px; right: 25px; font-size: 0.75rem; font-weight: 800; opacity: 0.4; }
         a { color: inherit; text-decoration: none; }
@@ -101,7 +98,7 @@ const html = `<!DOCTYPE html>
             <button class="btn" onclick="openAuth('signup')" style="margin-left:10px;">Sign Up</button>
         </div>
         <div id="loggedInUI" style="display:none;">
-            <span id="userDisplay" style="margin-right:20px; font-weight:800; color:var(--accent); font-size:0.9rem;"></span>
+            <span id="userDisplay" style="margin-right:20px; font-weight:800; color:var(--accent);"></span>
             <button class="btn btn-outline" onclick="logout()">Logout</button>
         </div>
     </div>
@@ -117,6 +114,10 @@ const html = `<!DOCTYPE html>
         </div>
 
         <div id="homeUI">
+            <div id="recentBlock" style="display:none;">
+                <div class="section-label">Your Recents</div>
+                <div id="recentContainer" class="chip-group"></div>
+            </div>
             <div class="section-label">Most Popular</div>
             <div id="popContainer" class="chip-group"></div>
             <div id="favBlock" style="display:none;">
@@ -126,9 +127,9 @@ const html = `<!DOCTYPE html>
         </div>
 
         <div id="results" class="dashboard">
-            <div class="stat-card" style="text-align:center; border-bottom: 2px solid var(--border);">
-                <h2 id="gTitle" style="font-size: 2rem; letter-spacing: -0.5px;">-</h2>
-                <p id="gOwner" style="color:var(--accent); font-weight:700; margin-top:8px; font-size:1rem;"></p>
+            <div class="stat-card" style="text-align:center;">
+                <h2 id="gTitle">-</h2>
+                <p id="gOwner" style="color:var(--accent); font-weight:700; margin-top:8px;"></p>
                 <div style="margin-top:25px; display:flex; gap:12px; justify-content:center;">
                     <a id="gPlay" target="_blank" class="btn">Play Game</a>
                     <button class="btn btn-outline" id="favBtn" onclick="toggleFavorite()">Favorite</button>
@@ -141,14 +142,14 @@ const html = `<!DOCTYPE html>
                 <div class="stat-card"><span class="stat-label">Rating</span><span class="stat-value" id="vRate">-</span></div>
                 <div class="stat-card"><span class="stat-label">Favorites</span><span class="stat-value" id="vFav">-</span></div>
                 <div class="stat-card"><span class="stat-label">Max Players per Server</span><span class="stat-value" id="vMax">-</span></div>
-                <div class="stat-card"><span class="stat-label">Creation Date</span><span class="stat-value" id="vCreated" style="font-size:1.1rem;">-</span></div>
-                <div class="stat-card"><span class="stat-label">Last Updated</span><span class="stat-value" id="vUpdated" style="font-size:1.1rem;">-</span></div>
+                <div class="stat-card"><span class="stat-label">Creation Date</span><span class="stat-value" id="vCreated">-</span></div>
+                <div class="stat-card"><span class="stat-label">Last Updated</span><span class="stat-value" id="vUpdated">-</span></div>
             </div>
             <div class="stat-card">
                 <span class="stat-label">Game Description</span>
-                <p id="gDesc" style="font-size:0.9rem; color:#bbb; margin-top:15px; white-space:pre-wrap; line-height:1.6;"></p>
+                <p id="gDesc" style="font-size:0.9rem; color:#bbb; margin-top:15px; white-space:pre-wrap;"></p>
             </div>
-            <button class="btn btn-outline" style="padding:15px;" onclick="location.reload()">Start New Search</button>
+            <button class="btn btn-outline" onclick="location.reload()">Start New Search</button>
         </div>
     </div>
 
@@ -186,13 +187,12 @@ const html = `<!DOCTYPE html>
         async function handleAuth(mode) {
             const uInput = document.getElementById('mUser').value.trim();
             const p = document.getElementById('mPass').value;
-            if(!uInput || p.length < 6) return alert("Enter valid credentials (min 6 chars for password)");
             const u = uInput.toLowerCase() + "@rostats.internal";
             try {
                 if(mode === 'signup') await createUserWithEmailAndPassword(auth, u, p);
                 else await signInWithEmailAndPassword(auth, u, p);
                 closeModal();
-            } catch(e) { alert("Error: " + e.message); }
+            } catch(e) { alert(e.message); }
         }
 
         window.logout = () => signOut(auth).then(() => location.reload());
@@ -204,9 +204,9 @@ const html = `<!DOCTYPE html>
                 document.getElementById('loggedOutUI').style.display = 'none';
                 document.getElementById('userDisplay').innerText = user.email.split('@')[0].toUpperCase();
                 const snap = await getDoc(doc(db, "users", user.uid));
-                userData = snap.exists() ? snap.data() : { favorites: [] };
+                userData = snap.exists() ? snap.data() : { favorites: [], recents: [] };
                 if(!snap.exists()) await setDoc(doc(db, "users", user.uid), userData);
-                renderUserFavs();
+                renderUserCollections();
             }
         });
 
@@ -215,10 +215,10 @@ const html = `<!DOCTYPE html>
         window.run = async () => {
             const input = document.getElementById('placeId').value;
             const id = input.match(/\\d+/) ? input.match(/\\d+/)[0] : "";
-            if(!id) return alert("Please enter a valid Game ID or Link");
+            if(!id) return;
             currentId = id;
             const btn = document.getElementById('scanBtn');
-            btn.innerText = "Analyzing...";
+            btn.innerText = "...";
             try {
                 const val = await fetch("/api/validate-id?id="+id).then(r => r.json());
                 const data = await fetch("/api/get-stats?uid="+val.universeId).then(r => r.json());
@@ -230,7 +230,6 @@ const html = `<!DOCTYPE html>
                 document.getElementById('gOwner').innerText = "By " + g.creator.name;
                 document.getElementById('vPlay').innerText = fmt(g.playing);
                 document.getElementById('vVisit').innerText = fmt(g.visits);
-                // Updated conservative multiplier: 0.4 per visit
                 document.getElementById('vRev').innerText = "R$ " + fmt(Math.floor(g.visits * 0.4));
                 document.getElementById('vRate').innerText = Math.round((data.votes.upVotes/(data.votes.upVotes+data.votes.downVotes))*100) + "%";
                 document.getElementById('vFav').innerText = fmt(data.favorites);
@@ -240,9 +239,19 @@ const html = `<!DOCTYPE html>
                 document.getElementById('gDesc').innerText = g.description;
                 document.getElementById('gPlay').href = "https://www.roblox.com/games/"+id;
                 
+                // FIXED: Save to Recents for logged in users
+                if(currentUser) {
+                    const recentGame = { id: id, name: g.name };
+                    // Remove if already exists to avoid duplicates, then add to top
+                    const filtered = (userData.recents || []).filter(f => f.id !== id);
+                    const newRecents = [recentGame, ...filtered].slice(0, 10);
+                    await updateDoc(doc(db, "users", currentUser.uid), { recents: newRecents });
+                    userData.recents = newRecents;
+                }
+
                 await setDoc(doc(db, "popular", id), { name: g.name, count: increment(1), hidden: false }, { merge: true });
                 updateFavBtn();
-            } catch(e) { alert("Data fetch failed. Check Game ID."); }
+            } catch(e) { alert("Game not found"); }
             btn.innerText = "Scan";
         };
 
@@ -258,7 +267,7 @@ const html = `<!DOCTYPE html>
             const snap = await getDoc(doc(db, "users", currentUser.uid));
             userData = snap.data();
             updateFavBtn();
-            renderUserFavs();
+            renderUserCollections();
         };
 
         function updateFavBtn() {
@@ -266,37 +275,44 @@ const html = `<!DOCTYPE html>
             btn.innerText = userData?.favorites?.some(f => f.id === currentId) ? "Unfavorite" : "Favorite";
         }
 
-        function renderUserFavs() {
+        function renderUserCollections() {
+            // Render Favorites
             if(userData?.favorites?.length) {
                 document.getElementById('favBlock').style.display = 'block';
-                const container = document.getElementById('favContainer');
-                container.innerHTML = '';
-                userData.favorites.forEach(f => {
-                    const c = document.createElement('div');
-                    c.className = 'chip';
-                    c.innerText = f.name;
-                    c.onclick = () => { document.getElementById('placeId').value = f.id; window.run(); };
-                    container.appendChild(c);
-                });
-            } else {
-                document.getElementById('favBlock').style.display = 'none';
-            }
+                renderChips(userData.favorites, 'favContainer');
+            } else document.getElementById('favBlock').style.display = 'none';
+
+            // Render Recents
+            if(userData?.recents?.length) {
+                document.getElementById('recentBlock').style.display = 'block';
+                renderChips(userData.recents, 'recentContainer');
+            } else document.getElementById('recentBlock').style.display = 'none';
+        }
+
+        function renderChips(list, targetId) {
+            const container = document.getElementById(targetId);
+            container.innerHTML = '';
+            list.forEach(item => {
+                const c = document.createElement('div');
+                c.className = 'chip';
+                c.innerText = item.name;
+                c.onclick = () => { document.getElementById('placeId').value = item.id; window.run(); };
+                container.appendChild(c);
+            });
         }
 
         async function loadPopular() {
-            try {
-                const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(12));
-                const snap = await getDocs(q);
-                const container = document.getElementById('popContainer');
-                container.innerHTML = '';
-                snap.forEach(d => {
-                    const c = document.createElement('div');
-                    c.className = 'chip';
-                    c.innerText = d.data().name;
-                    c.onclick = () => { document.getElementById('placeId').value = d.id; window.run(); };
-                    container.appendChild(c);
-                });
-            } catch(e) { console.error("Index load pending..."); }
+            const q = query(collection(db, "popular"), where("hidden", "==", false), orderBy("count", "desc"), limit(12));
+            const snap = await getDocs(q);
+            const container = document.getElementById('popContainer');
+            container.innerHTML = '';
+            snap.forEach(d => {
+                const c = document.createElement('div');
+                c.className = 'chip';
+                c.innerText = d.data().name;
+                c.onclick = () => { document.getElementById('placeId').value = d.id; window.run(); };
+                container.appendChild(c);
+            });
         }
         loadPopular();
     </script>
