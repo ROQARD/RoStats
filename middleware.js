@@ -53,25 +53,21 @@ const html = `<!DOCTYPE html>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        /* Header & Modal */
         .header { width: 100%; max-width: 650px; padding: 20px; display: flex; justify-content: flex-end; gap: 10px; }
-        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; }
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; }
         .modal { background: #0f0f0f; border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; }
-        .modal h2 { margin-bottom: 20px; font-weight: 800; }
-        .modal input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; outline: none; }
+        .modal input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 12px; margin-bottom: 12px; outline: none; }
         
-        .auth-btn { background: var(--accent); color: #000; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+        .auth-btn { background: var(--accent); color: #000; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 0.8rem; }
         .auth-btn.secondary { background: #1a1a1a; color: #fff; border: 1px solid var(--border); }
-        .google-btn { width: 100%; background: #fff; color: #000; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-        /* Main UI */
         .container { width: 100%; max-width: 650px; padding: 0 20px 100px; }
         .search-area { background: var(--card); border: 1px solid var(--border); padding: 35px; border-radius: 28px; text-align: center; margin-bottom: 20px; }
         .input-box { display: flex; gap: 10px; background: #000; padding: 8px; border-radius: 16px; border: 1px solid var(--border); }
         input { flex: 1; background: transparent; border: none; color: white; padding: 10px 15px; font-size: 0.95rem; outline: none; }
         .scan-btn { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 12px; font-weight: 800; cursor: pointer; }
         
-        .nav-label { font-size: 0.6rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 1.5px; margin: 20px 0 10px; }
+        .nav-label { font-size: 0.6rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 1.5px; margin: 25px 0 10px; }
         .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .nav-chip { background: var(--card); border: 1px solid var(--border); color: var(--dim); padding: 10px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
         
@@ -84,26 +80,23 @@ const html = `<!DOCTYPE html>
         .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .val { font-size: 1.4rem; font-weight: 800; display: block; }
+        .val { font-size: 1.3rem; font-weight: 800; display: block; }
         .label { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; font-weight: 900; }
 
-        #gDesc { font-size: 0.85rem; color: var(--dim); line-height: 1.6; max-height: 200px; overflow-y: auto; white-space: pre-wrap; text-align: left; }
+        .desc-container { text-align: left; background: #000; padding: 20px; border-radius: 15px; border: 1px solid var(--border); }
+        #gDesc { font-size: 0.85rem; color: #ccc; line-height: 1.6; max-height: 250px; overflow-y: auto; white-space: pre-wrap; }
         
         .admin-tag { background: #ffdf00; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 900; margin-right: 8px; display: none; }
         .footer { position: fixed; bottom: 20px; right: 25px; opacity: 0.4; font-size: 0.65rem; font-weight: 800; }
     </style>
 </head>
 <body>
-    <div id="authModal" class="modal-overlay" onclick="closeModal(event)">
+    <div id="authModal" class="modal-overlay" onclick="closeModal()">
         <div class="modal" onclick="event.stopPropagation()">
-            <h2 id="modalTitle">Login</h2>
+            <h2 id="modalTitle" style="margin-bottom:20px;">Login</h2>
             <input type="text" id="modalUser" placeholder="Username">
             <input type="password" id="modalPass" placeholder="Password">
             <button class="auth-btn" style="width:100%; padding:14px;" id="modalSubmit">Continue</button>
-            <div style="margin: 15px 0; font-size: 0.7rem; color: var(--dim);">OR</div>
-            <button class="auth-btn google-btn" onclick="handleGoogle()">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Google
-            </button>
         </div>
     </div>
 
@@ -116,7 +109,7 @@ const html = `<!DOCTYPE html>
             <span class="admin-tag" id="adminTag">ADMIN</span>
             <span id="displayUser" style="margin-right:12px; font-weight:700; font-size:0.8rem;"></span>
             <button id="adminBtn" class="auth-btn secondary" style="display:none; margin-right:8px;" onclick="toggleAdminPanel()">Panel</button>
-            <button class="auth-btn" style="background:var(--warn); color:#fff;" onclick="logout()">Logout</button>
+            <button class="auth-btn" style="background:var(--warn); color:#fff;" onclick="logout()">Sign Out</button>
         </div>
     </div>
 
@@ -124,7 +117,7 @@ const html = `<!DOCTYPE html>
         <div class="search-area">
             <h1 style="font-size: 2.2rem; margin-bottom:20px; letter-spacing:-1px;">Ro<span style="color:var(--accent)">Stats</span></h1>
             <div class="input-box">
-                <input type="text" id="placeId" placeholder="Game Link or ID...">
+                <input type="text" id="placeId" placeholder="Paste Game ID here...">
                 <button class="scan-btn" id="scanBtn" onclick="run()" disabled>Scan</button>
             </div>
             <div class="captcha-box" style="margin-top:15px;"><div class="cf-turnstile" data-sitekey="0x4AAAAAACk-FIXxhlsidtFU" data-callback="onCaptcha"></div></div>
@@ -140,15 +133,18 @@ const html = `<!DOCTYPE html>
             <div class="box">
                 <div class="fav-btn" id="heartBtn" onclick="toggleFavorite()">❤</div>
                 <div class="thumb-wrap"><img id="gThumb" src=""></div>
-                <h2 id="gTitle" style="font-size: 1.8rem;">-</h2>
-                <a id="gOwner" style="color:var(--accent); text-decoration:none; font-size:0.9rem; font-weight:600; margin-top:8px; display:inline-block;" target="_blank">-</a>
+                <h2 id="gTitle" style="font-size: 1.6rem;">-</h2>
+                <a id="gOwner" style="color:var(--accent); text-decoration:none; font-size:0.85rem; font-weight:600; margin-top:8px; display:inline-block;" target="_blank">-</a>
             </div>
             <div class="stats-grid">
                 <div class="box"><span class="label">Active</span><span class="val" id="vPlay">-</span></div>
                 <div class="box"><span class="label">Visits</span><span class="val" id="vVisit">-</span></div>
                 <div class="box"><span class="label">Rating</span><span class="val" id="vRate">-</span></div>
             </div>
-            <div class="box"><div class="nav-label" style="margin-top:0; color:var(--text)">Full Description</div><div id="gDesc"></div></div>
+            <div class="desc-container">
+                <div class="nav-label" style="margin: 0 0 10px 0; color:var(--text)">Full Description</div>
+                <div id="gDesc"></div>
+            </div>
         </div>
     </div>
 
@@ -156,7 +152,7 @@ const html = `<!DOCTYPE html>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, orderBy, limit, getDocs, increment } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -171,37 +167,32 @@ const html = `<!DOCTYPE html>
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let currentUser = null, userData = null, currentGame = null, authMode = 'login';
+        let currentUser = null, userData = null, currentGame = null;
 
-        // --- Modal Control ---
+        const fmt = x => {
+            if (x >= 1e9) return (x / 1e9).toFixed(1) + 'B';
+            if (x >= 1e6) return (x / 1e6).toFixed(1) + 'M';
+            if (x >= 1e3) return (x / 1e3).toFixed(1) + 'K';
+            return x.toLocaleString();
+        };
+
         window.openModal = (mode) => {
-            authMode = mode;
             document.getElementById('modalTitle').innerText = mode === 'signup' ? 'Create Account' : 'Login';
-            document.getElementById('modalSubmit').innerText = mode === 'signup' ? 'Create Account' : 'Login';
             document.getElementById('modalSubmit').onclick = () => handleAuth(mode);
             document.getElementById('authModal').style.display = 'flex';
         };
-        window.closeModal = (e) => { document.getElementById('authModal').style.display = 'none'; };
+        window.closeModal = () => { document.getElementById('authModal').style.display = 'none'; };
 
-        // --- Auth & Google ---
         window.handleAuth = async (mode) => {
             const user = document.getElementById('modalUser').value;
             const pass = document.getElementById('modalPass').value;
-            if(!user || pass.length < 6) return alert("Username required and password must be 6+ characters.");
-            const fakeEmail = user + "@rostats.internal";
+            if(!user || pass.length < 6) return alert("Username required and password 6+ chars.");
+            const email = user + "@rostats.internal";
             try {
-                if(mode === 'signup') await createUserWithEmailAndPassword(auth, fakeEmail, pass);
-                else await signInWithEmailAndPassword(auth, fakeEmail, pass);
+                if(mode === 'signup') await createUserWithEmailAndPassword(auth, email, pass);
+                else await signInWithEmailAndPassword(auth, email, pass);
                 closeModal();
             } catch(e) { alert("Error: " + e.message); }
-        };
-
-        window.handleGoogle = async () => {
-            try {
-                const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
-                closeModal();
-            } catch(e) { alert("Google Sign-In failed."); }
         };
 
         window.logout = () => signOut(auth);
@@ -209,21 +200,15 @@ const html = `<!DOCTYPE html>
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
             if(user) {
-                const userDocRef = doc(db, "users", user.uid);
-                const snap = await getDoc(userDocRef);
+                const snap = await getDoc(doc(db, "users", user.uid));
                 if(!snap.exists()) {
                     userData = { recents: [], favorites: [], role: 'user' };
-                    await setDoc(userDocRef, userData);
-                } else {
-                    userData = snap.data();
-                }
+                    await setDoc(doc(db, "users", user.uid), userData);
+                } else { userData = snap.data(); }
                 document.getElementById('loggedOutUI').style.display = 'none';
                 document.getElementById('loggedInUI').style.display = 'flex';
-                document.getElementById('displayUser').innerText = user.displayName || user.email.split('@')[0];
-                if(userData.role === 'admin') {
-                    document.getElementById('adminBtn').style.display = 'block';
-                    document.getElementById('adminTag').style.display = 'inline-block';
-                }
+                document.getElementById('displayUser').innerText = user.email.split('@')[0];
+                if(userData.role === 'admin') { document.getElementById('adminBtn').style.display = 'block'; document.getElementById('adminTag').style.display = 'inline-block'; }
                 renderUserCollections();
             } else {
                 document.getElementById('loggedOutUI').style.display = 'flex';
@@ -231,7 +216,6 @@ const html = `<!DOCTYPE html>
             }
         });
 
-        // --- App Logic ---
         window.onCaptcha = (t) => { window.captchaToken = t; document.getElementById('scanBtn').disabled = false; };
 
         window.run = async () => {
@@ -244,20 +228,23 @@ const html = `<!DOCTYPE html>
                 const d = await fetch("/api/get-stats?uid=" + r.universeId).then(res => res.json());
                 const g = d.game;
                 currentGame = { id, name: g.name };
+                
                 document.getElementById('navWrapper').style.display = 'none';
                 document.getElementById('results').style.display = 'flex';
                 document.getElementById('gTitle').innerText = g.name;
-                document.getElementById('vPlay').innerText = g.playing.toLocaleString();
-                document.getElementById('vVisit').innerText = (g.visits / 1e6).toFixed(1) + "M";
+                document.getElementById('vPlay').innerText = fmt(g.playing);
+                document.getElementById('vVisit').innerText = fmt(g.visits);
                 document.getElementById('vRate').innerText = Math.round((d.votes.upVotes / (d.votes.upVotes + d.votes.downVotes)) * 100) + "%";
                 document.getElementById('gDesc').innerText = g.description;
                 document.getElementById('gThumb').src = "https://www.roblox.com/asset-thumbnail/image?assetId=" + id + "&width=420&height=420&format=png";
                 document.getElementById('gOwner').innerText = "By " + g.creator.name;
                 document.getElementById('gOwner').href = "https://www.roblox.com/users/" + g.creator.id;
                 document.getElementById('heartBtn').classList.toggle('active', userData?.favorites?.some(x => x.id === id));
+                
                 if(currentUser) await updateDoc(doc(db, "users", currentUser.uid), { recents: arrayUnion(currentGame) });
                 await setDoc(doc(db, "popular", id), { name: g.name, count: increment(1), hidden: false }, { merge: true });
                 btn.innerText = 'Scan';
+                loadPopular();
             } catch(e) { btn.innerText = 'Scan'; alert("Error loading game."); }
         };
 
